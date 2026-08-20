@@ -1,7 +1,7 @@
 {
   "name": "global-t-and-t-digital-signage",
   "version": "1.0.0",
-  "description": "Global T & T Digital Signage \u2014 self-hosted CMS, Node + PostgreSQL backend, static dashboard and player frontend",
+  "description": "Global T & T Digital Signage — self-hosted CMS, Node + PostgreSQL backend, static dashboard and player frontend",
   "main": "server/server.js",
   "scripts": {
     "start": "node server/server.js"
