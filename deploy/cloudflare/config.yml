@@ -1,0 +1,16 @@
+# Cloudflare Tunnel config.
+#
+# This file is generated manually (not by `cloudflared` itself) — after you
+# run `cloudflared tunnel create signal-signage`, it prints a Tunnel ID and
+# creates a credentials JSON file under ~/.cloudflared/. Fill both into the
+# placeholders below.
+
+tunnel: YOUR-TUNNEL-ID-HERE
+credentials-file: /Users/YOUR-USERNAME/.cloudflared/YOUR-TUNNEL-ID-HERE.json
+
+ingress:
+  # Replace with the hostname you used in `cloudflared tunnel route dns`
+  - hostname: signage.yourdomain.com
+    service: http://localhost:3000
+  # Required catch-all — leave this as the last rule
+  - service: http_status:404
