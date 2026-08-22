@@ -128,7 +128,7 @@ async function loadPlaylists() {
 }
 
 async function loadScreens() {
-  const res = await fetch("/api/screens");
+  const res = await fetch("/api/screens", { credentials: "include" });
   screens = await res.json();
   renderScreens();
 }
