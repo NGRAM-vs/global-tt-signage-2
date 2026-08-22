@@ -690,8 +690,10 @@ $("new-screen-btn").addEventListener("click", async () => {
   await fetch("/api/screens", {
     credentials: "include",
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    Authorization: `Bearer ${token}`, // Manually provide credentials if not using cookies
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    }, // Moved inside the headers object}
     body: JSON.stringify({ name: name.trim() || "New screen" }),
   });
 });
