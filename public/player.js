@@ -408,7 +408,13 @@ function attemptPlay(mediaEl) {
     // it fails silently — no on-screen prompt. Actual autoplay-with-sound
     // support has to come from how the browser itself is launched (see
     // the --autoplay-policy flag in the README), not from JS on the page.
-    p.catch(() => {});
+    p.catch((err) => {
+      console.warn(
+        "Autoplay blocked. Attempting to play on user interaction.",
+        err
+      );
+      mediaEl.addEventListener("click", () => mediaEl.play(), { once: true });
+    });
   }
 }
 
