@@ -685,6 +685,7 @@ $("new-screen-btn").addEventListener("click", async () => {
   );
   if (name === null) return;
   await fetch("/api/screens", {
+    credentials: "include",
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ name: name.trim() || "New screen" }),
