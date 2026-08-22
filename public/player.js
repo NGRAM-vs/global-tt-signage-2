@@ -404,25 +404,36 @@ function hexToSoft(hex) {
 function attemptPlay(mediaEl) {
   const p = mediaEl.play();
   if (p && p.catch) {
-    // If the browser blocks this (no user interaction with the page yet),
-    // it fails silently — no on-screen prompt. Actual autoplay-with-sound
-    // support has to come from how the browser itself is launched (see
-    // the --autoplay-policy flag in the README), not from JS on the page.
-    p.catch((err) => {
-      console.warn(
-        "Autoplay blocked. Attempting to play on user interaction.",
-        err
-      );
-      const interactionHandler = () => {
-        mediaEl.play().catch((error) => {
-          console.error("Playback failed after user interaction.", error);
-        });
-        mediaEl.removeEventListener("click", interactionHandler);
-      };
-      mediaEl.addEventListener("click", interactionHandler, { once: true });
+    p.catch(() => {
+      // Autoplay-with-sound was blocked. Falling back to muted playback
+      // means the visual content still plays (a frozen frame is worse
+      // than silence) — sound recovers automatically once there's any
+      // interaction with the page, via the listener below, or once the
+      // browser itself is launched with the autoplay flag from the README.
+      if (!mediaEl.muted) {
+        mediaEl.dataset.wantsSound = "true";
+        mediaEl.muted = true;
+        mediaEl.play().catch(() => {});
+      }
     });
   }
 }
+
+// The moment there's ANY interaction with the page — a click, a tap, a
+// keypress — browsers consider that consent for audio going forward. This
+// silently un-mutes whatever's currently playing and needed sound, with no
+// visible prompt (unlike the old "tap to enable sound" overlay).
+function unlockSoundOnInteraction() {
+  document.querySelectorAll(".needs-play-lifecycle").forEach((el) => {
+    if (el.dataset.wantsSound === "true" && el.muted) {
+      el.muted = false;
+      el.play().catch(() => {});
+    }
+  });
+}
+["click", "touchstart", "keydown"].forEach((evt) => {
+  document.addEventListener(evt, unlockSoundOnInteraction);
+});
 
 function showSlide(index) {
   const nodes = document.querySelectorAll("#slideshow .slide");
