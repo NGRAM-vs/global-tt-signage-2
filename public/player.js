@@ -413,7 +413,13 @@ function attemptPlay(mediaEl) {
         "Autoplay blocked. Attempting to play on user interaction.",
         err
       );
-      mediaEl.addEventListener("click", () => mediaEl.play(), { once: true });
+      const interactionHandler = () => {
+        mediaEl.play().catch((error) => {
+          console.error("Playback failed after user interaction.", error);
+        });
+        mediaEl.removeEventListener("click", interactionHandler);
+      };
+      mediaEl.addEventListener("click", interactionHandler, { once: true });
     });
   }
 }
