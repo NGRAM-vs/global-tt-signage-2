@@ -684,10 +684,14 @@ $("new-screen-btn").addEventListener("click", async () => {
     "New screen"
   );
   if (name === null) return;
+
+  const token = localStorage.getItem("auth_token"); // Retrieve your stored token
+
   await fetch("/api/screens", {
     credentials: "include",
     method: "POST",
     headers: { "Content-Type": "application/json" },
+    Authorization: `Bearer ${token}`, // Manually provide credentials if not using cookies
     body: JSON.stringify({ name: name.trim() || "New screen" }),
   });
 });
