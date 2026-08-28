@@ -93,15 +93,14 @@ html, body { width: 100%; height: 100%; overflow: hidden; }
 
 #top-bar {
   position: absolute;
-  top: 24px;
-  left: 72px;
-  right: 72px;
+  top: 20px;
+  left: 28px;
   z-index: 5;
   display: flex;
   align-items: center;
-  gap: 22px;
+  gap: 16px;
 }
-#segments { flex: 1; display: flex; gap: 8px; }
+#segments { display: flex; gap: 8px; width: 240px; }
 #conn-badge {
   flex: none;
   background: var(--live-red);
@@ -152,7 +151,8 @@ html, body { width: 100%; height: 100%; overflow: hidden; }
   #lower-third { grid-template-columns: auto 1fr; row-gap: 4px; }
   .weather, .datetime { display: none; }
   .slide-content { max-width: 90%; padding: 40px; }
-  #top-bar { left: 24px; right: 24px; gap: 14px; }
+  #top-bar { left: 18px; gap: 12px; }
+  #segments { width: 140px; }
   .brand-mark.chip .brand-badge { width: 26px; height: 26px; font-size: 10px; }
   .brand-mark.chip .brand-name { font-size: 12px; }
 }
