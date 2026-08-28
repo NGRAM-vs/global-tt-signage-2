@@ -1,7 +1,6 @@
 require("dotenv").config();
 
 const path = require("path");
-const os = require("os");
 const fs = require("fs");
 const crypto = require("crypto");
 const express = require("express");
@@ -11,13 +10,15 @@ const rateLimit = require("express-rate-limit");
 
 const { pool, init } = require("./db");
 const { broadcast, subscribe } = require("./events");
-const r2 = require("./storage");
 
 const PORT = process.env.PORT || 3000;
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "admin@example.com";
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin";
 const SESSION_SECRET = process.env.SESSION_SECRET || "dev-secret-change-me";
 const IS_PRODUCTION = process.env.NODE_ENV === "production";
+
+const UPLOAD_DIR = path.join(__dirname, "..", "uploads");
+fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 
 const app = express();
 
@@ -40,6 +41,7 @@ app.use(
 );
 
 app.use(express.static(path.join(__dirname, "..", "public")));
+app.use("/uploads", express.static(UPLOAD_DIR));
 
 function requireAuth(req, res, next) {
   if (req.session && req.session.authenticated) return next();
@@ -91,9 +93,10 @@ app.get("/api/session", (req, res) => {
 
 const upload = multer({
   storage: multer.diskStorage({
-    destination: os.tmpdir(),
+    destination: UPLOAD_DIR,
     filename: (req, file, cb) => {
-      cb(null, "upload-" + Date.now() + "-" + crypto.randomBytes(6).toString("hex"));
+      const safe = file.originalname.replace(/[^a-zA-Z0-9.\-_]/g, "_");
+      cb(null, Date.now() + "-" + crypto.randomBytes(4).toString("hex") + "-" + safe);
     }
   }),
   limits: { fileSize: 500 * 1024 * 1024 } // 500MB per file, generous for signage video
@@ -116,24 +119,15 @@ app.post("/api/content", requireAuth, upload.array("files", 20), asyncRoute(asyn
     const file = files[i];
     const id = crypto.randomUUID();
     const type = file.mimetype.startsWith("video") ? "video" : file.mimetype.startsWith("audio") ? "audio" : "image";
-    const safeName = file.originalname.replace(/[^a-zA-Z0-9.\-_]/g, "_");
-    const key = "content/" + Date.now() + "-" + crypto.randomBytes(4).toString("hex") + "-" + safeName;
-
-    let url;
-    try {
-      url = await r2.uploadFile(file.path, key, file.mimetype);
-    } finally {
-      fs.unlink(file.path, () => {}); // always clear the temp copy, success or failure
-    }
-
+    const url = "/uploads/" + file.filename;
     const createdAt = Date.now();
     const durationSeconds = (typeof durations[i] === "number" && durations[i] > 0) ? durations[i] : null;
     await pool.query(
       "INSERT INTO content (id, name, type, url, filename, size, duration_seconds, created_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)",
-      [id, file.originalname, type, url, key, file.size, durationSeconds, createdAt]
+      [id, file.originalname, type, url, file.filename, file.size, durationSeconds, createdAt]
     );
     created.push({
-      id, name: file.originalname, type, url, filename: key,
+      id, name: file.originalname, type, url, filename: file.filename,
       size: file.size, duration_seconds: durationSeconds, created_at: createdAt
     });
   }
@@ -146,7 +140,7 @@ app.delete("/api/content/:id", requireAuth, asyncRoute(async (req, res) => {
   const row = rows[0];
   if (!row) return res.status(404).json({ error: "Not found" });
   await pool.query("DELETE FROM content WHERE id = $1", [req.params.id]);
-  r2.deleteFile(row.filename).catch(() => {}); // ignore if already gone
+  fs.unlink(path.join(UPLOAD_DIR, row.filename), () => {}); // ignore if already gone
   broadcast("content", "delete", req.params.id);
   res.json({ ok: true });
 }));

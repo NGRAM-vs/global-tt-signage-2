@@ -1,14 +1,12 @@
 {
   "name": "global-t-and-t-digital-signage",
   "version": "1.0.0",
-  "description": "Global T & T Digital Signage — self-hosted CMS, Node + PostgreSQL backend, static dashboard and player frontend",
+  "description": "Global T & T Digital Signage \u2014 self-hosted CMS, Node + PostgreSQL backend, static dashboard and player frontend",
   "main": "server/server.js",
   "scripts": {
-    "start": "node server/server.js",
-    "build": "echo 'No build step required'"
+    "start": "node server/server.js"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.658.0",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "express-rate-limit": "^7.4.0",
