@@ -40,15 +40,14 @@ loginForm.addEventListener("submit", async (e) => {
     const res = await fetch("/api/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email, password })
     });
     if (!res.ok) throw new Error();
     loginScreen.hidden = true;
     dashboard.hidden = false;
     startListeners();
   } catch (err) {
-    loginError.textContent =
-      "Couldn't sign in — check the email and password and try again.";
+    loginError.textContent = "Couldn't sign in — check the email and password and try again.";
     loginError.hidden = false;
   } finally {
     btn.disabled = false;
@@ -65,12 +64,8 @@ $("signout-btn").addEventListener("click", async () => {
 
 document.querySelectorAll(".nav-item[data-view]").forEach((btn) => {
   btn.addEventListener("click", () => {
-    document
-      .querySelectorAll(".nav-item[data-view]")
-      .forEach((b) => b.classList.remove("active"));
-    document
-      .querySelectorAll(".view")
-      .forEach((v) => v.classList.remove("active"));
+    document.querySelectorAll(".nav-item[data-view]").forEach((b) => b.classList.remove("active"));
+    document.querySelectorAll(".view").forEach((v) => v.classList.remove("active"));
     btn.classList.add("active");
     $("view-" + btn.dataset.view).classList.add("active");
   });
@@ -90,11 +85,7 @@ function startListeners() {
   const es = new EventSource("/api/events");
   es.onmessage = (e) => {
     let payload;
-    try {
-      payload = JSON.parse(e.data);
-    } catch (err) {
-      return;
-    }
+    try { payload = JSON.parse(e.data); } catch (err) { return; }
     if (payload.resource === "content") debounce("content", loadContent);
     if (payload.resource === "playlists") debounce("playlists", loadPlaylists);
     if (payload.resource === "screens") debounce("screens", loadScreens);
@@ -128,7 +119,7 @@ async function loadPlaylists() {
 }
 
 async function loadScreens() {
-  const res = await fetch("/api/screens", { credentials: "include" });
+  const res = await fetch("/api/screens");
   screens = await res.json();
   renderScreens();
 }
@@ -156,9 +147,7 @@ function detectDuration(file) {
     return Promise.resolve(null);
   }
   return new Promise((resolve) => {
-    const el = document.createElement(
-      file.type.startsWith("video") ? "video" : "audio"
-    );
+    const el = document.createElement(file.type.startsWith("video") ? "video" : "audio");
     const url = URL.createObjectURL(file);
     let settled = false;
     const finish = (value) => {
@@ -169,8 +158,7 @@ function detectDuration(file) {
     };
     el.preload = "metadata";
     el.src = url;
-    el.onloadedmetadata = () =>
-      finish(isFinite(el.duration) ? el.duration : null);
+    el.onloadedmetadata = () => finish(isFinite(el.duration) ? el.duration : null);
     el.onerror = () => finish(null);
     setTimeout(() => finish(null), 5000); // don't let a weird file stall the whole upload
   });
@@ -193,20 +181,15 @@ function uploadFiles(files) {
       xhr.withCredentials = true;
       xhr.upload.onprogress = (evt) => {
         if (evt.lengthComputable) {
-          progressEl.textContent =
-            "Uploading — " + Math.round((evt.loaded / evt.total) * 100) + "%";
+          progressEl.textContent = "Uploading — " + Math.round((evt.loaded / evt.total) * 100) + "%";
         }
       };
       xhr.onload = () => {
         progressEl.hidden = true;
-        if (xhr.status >= 200 && xhr.status < 300)
-          resolve(JSON.parse(xhr.responseText));
+        if (xhr.status >= 200 && xhr.status < 300) resolve(JSON.parse(xhr.responseText));
         else reject(new Error("Upload failed"));
       };
-      xhr.onerror = () => {
-        progressEl.hidden = true;
-        reject(new Error("Upload failed"));
-      };
+      xhr.onerror = () => { progressEl.hidden = true; reject(new Error("Upload failed")); };
       xhr.send(form);
     });
   });
@@ -234,11 +217,8 @@ function renderLibrary() {
       '<div class="content-name"></div>' +
       '<div class="content-row"><span class="tag"></span><button class="delete-btn" title="Delete">✕</button></div>';
     meta.querySelector(".content-name").textContent = item.name;
-    meta.querySelector(".tag").textContent =
-      item.type +
-      (item.duration_seconds
-        ? " · " + formatDuration(item.duration_seconds)
-        : "");
+    meta.querySelector(".tag").textContent = item.type +
+      (item.duration_seconds ? " · " + formatDuration(item.duration_seconds) : "");
     meta.querySelector(".delete-btn").addEventListener("click", (ev) => {
       ev.stopPropagation();
       deleteContent(item);
@@ -260,8 +240,7 @@ function mediaThumb(item) {
   if (item.type === "audio") {
     const div = document.createElement("div");
     div.className = "content-thumb audio-thumb";
-    div.innerHTML =
-      '<svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>';
+    div.innerHTML = '<svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>';
     return div;
   }
   const img = document.createElement("img");
@@ -272,14 +251,7 @@ function mediaThumb(item) {
 }
 
 async function deleteContent(item) {
-  if (
-    !confirm(
-      'Delete "' +
-        item.name +
-        '"? This removes the file and takes it out of any playlist using it.'
-    )
-  )
-    return;
+  if (!confirm('Delete "' + item.name + '"? This removes the file and takes it out of any playlist using it.')) return;
   await fetch("/api/content/" + item.id, { method: "DELETE" });
 }
 
@@ -289,7 +261,7 @@ $("new-playlist-btn").addEventListener("click", async () => {
   const res = await fetch("/api/playlists", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name: "Untitled playlist" }),
+    body: JSON.stringify({ name: "Untitled playlist" })
   });
   const created = await res.json();
   currentPlaylistId = created.id;
@@ -304,11 +276,7 @@ function renderPlaylistList() {
     li.innerHTML = '<span></span><span class="count"></span>';
     li.querySelector("span").textContent = p.name || "Untitled playlist";
     li.querySelector(".count").textContent = (p.items || []).length + " slides";
-    li.addEventListener("click", () => {
-      currentPlaylistId = p.id;
-      renderPlaylistList();
-      renderPlaylistEditor();
-    });
+    li.addEventListener("click", () => { currentPlaylistId = p.id; renderPlaylistList(); renderPlaylistEditor(); });
     list.appendChild(li);
   });
 }
@@ -317,8 +285,7 @@ function renderPlaylistEditor() {
   const wrap = $("playlist-editor");
   const playlist = playlists.find((p) => p.id === currentPlaylistId);
   if (!playlist) {
-    wrap.innerHTML =
-      '<p class="empty-state">Select a playlist on the left, or create a new one.</p>';
+    wrap.innerHTML = '<p class="empty-state">Select a playlist on the left, or create a new one.</p>';
     return;
   }
 
@@ -328,24 +295,13 @@ function renderPlaylistEditor() {
   head.className = "playlist-editor-head";
   const nameInput = document.createElement("input");
   nameInput.value = playlist.name || "";
-  nameInput.addEventListener("change", () =>
-    updatePlaylist(playlist.id, {
-      name: nameInput.value.trim() || "Untitled playlist",
-    })
-  );
+  nameInput.addEventListener("change", () => updatePlaylist(playlist.id, { name: nameInput.value.trim() || "Untitled playlist" }));
   head.appendChild(nameInput);
   const delBtn = document.createElement("button");
   delBtn.className = "btn btn-danger";
   delBtn.textContent = "Delete playlist";
   delBtn.addEventListener("click", async () => {
-    if (
-      !confirm(
-        'Delete playlist "' +
-          playlist.name +
-          '"? Screens using it will show as unassigned.'
-      )
-    )
-      return;
+    if (!confirm('Delete playlist "' + playlist.name + '"? Screens using it will show as unassigned.')) return;
     await fetch("/api/playlists/" + playlist.id, { method: "DELETE" });
     currentPlaylistId = null;
   });
@@ -361,20 +317,13 @@ function renderPlaylistEditor() {
     if (item.type === "audio") {
       const div = document.createElement("div");
       div.className = "slide-item-audio-icon";
-      div.innerHTML =
-        '<svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>';
+      div.innerHTML = '<svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>';
       li.appendChild(div);
     } else if (item.url) {
-      const thumb =
-        item.type === "video"
-          ? document.createElement("video")
-          : document.createElement("img");
+      const thumb = item.type === "video" ? document.createElement("video") : document.createElement("img");
       thumb.className = "slide-item-thumb";
       thumb.src = item.url;
-      if (item.type === "video") {
-        thumb.muted = true;
-        thumb.preload = "metadata";
-      }
+      if (item.type === "video") { thumb.muted = true; thumb.preload = "metadata"; }
       li.appendChild(thumb);
     } else {
       const swatch = document.createElement("span");
@@ -390,14 +339,10 @@ function renderPlaylistEditor() {
 
     const meta = document.createElement("span");
     meta.className = "item-meta";
-    const soundNote =
-      item.type === "audio"
-        ? " · 🔊"
-        : item.type === "video" && item.muted === false
-        ? " · 🔊 own audio"
-        : item.voiceoverName
-        ? " · 🔊 voiceover"
-        : "";
+    const soundNote = item.type === "audio" ? " · 🔊"
+      : (item.type === "video" && item.muted === false) ? " · 🔊 own audio"
+      : item.voiceoverName ? " · 🔊 voiceover"
+      : "";
     meta.textContent = item.duration + "s" + soundNote;
     li.appendChild(meta);
 
@@ -408,18 +353,10 @@ function renderPlaylistEditor() {
       '<button class="up" title="Move up">↑</button>' +
       '<button class="down" title="Move down">↓</button>' +
       '<button class="remove" title="Remove">✕</button>';
-    actions
-      .querySelector(".edit")
-      .addEventListener("click", () => openDetailModal(playlist, item.itemId));
-    actions
-      .querySelector(".up")
-      .addEventListener("click", () => moveItem(playlist, i, -1));
-    actions
-      .querySelector(".down")
-      .addEventListener("click", () => moveItem(playlist, i, 1));
-    actions
-      .querySelector(".remove")
-      .addEventListener("click", () => removeItem(playlist, item.itemId));
+    actions.querySelector(".edit").addEventListener("click", () => openDetailModal(playlist, item.itemId));
+    actions.querySelector(".up").addEventListener("click", () => moveItem(playlist, i, -1));
+    actions.querySelector(".down").addEventListener("click", () => moveItem(playlist, i, 1));
+    actions.querySelector(".remove").addEventListener("click", () => removeItem(playlist, item.itemId));
     li.appendChild(actions);
 
     list.appendChild(li);
@@ -451,10 +388,7 @@ function renderPlaylistEditor() {
   const ta = tickerWrap.querySelector("textarea");
   ta.value = (playlist.ticker || []).join("\n");
   tickerWrap.querySelector("button").addEventListener("click", () => {
-    const lines = ta.value
-      .split("\n")
-      .map((s) => s.trim())
-      .filter(Boolean);
+    const lines = ta.value.split("\n").map((s) => s.trim()).filter(Boolean);
     updatePlaylist(playlist.id, { ticker: lines });
   });
   wrap.appendChild(tickerWrap);
@@ -464,7 +398,7 @@ async function updatePlaylist(id, patch) {
   await fetch("/api/playlists/" + id, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(patch),
+    body: JSON.stringify(patch)
   });
 }
 
@@ -485,15 +419,11 @@ function removeItem(playlist, itemId) {
 
 const pickerModal = $("picker-modal");
 $("picker-close").addEventListener("click", () => (pickerModal.hidden = true));
-pickerModal.addEventListener("click", (e) => {
-  if (e.target === pickerModal) pickerModal.hidden = true;
-});
+pickerModal.addEventListener("click", (e) => { if (e.target === pickerModal) pickerModal.hidden = true; });
 
 document.querySelectorAll(".picker-tab").forEach((tab) => {
   tab.addEventListener("click", () => {
-    document
-      .querySelectorAll(".picker-tab")
-      .forEach((t) => t.classList.remove("active"));
+    document.querySelectorAll(".picker-tab").forEach((t) => t.classList.remove("active"));
     tab.classList.add("active");
     $("picker-media").hidden = tab.dataset.kind !== "media";
     $("picker-announcement-form").hidden = tab.dataset.kind !== "announcement";
@@ -529,10 +459,8 @@ function addMediaSlide(content) {
   const playlist = playlists.find((p) => p.id === pickerTargetPlaylistId);
   if (!playlist) return;
 
-  const hasOwnDuration =
-    (content.type === "video" || content.type === "audio") &&
-    typeof content.duration_seconds === "number" &&
-    content.duration_seconds > 0;
+  const hasOwnDuration = (content.type === "video" || content.type === "audio") &&
+    typeof content.duration_seconds === "number" && content.duration_seconds > 0;
   const duration = hasOwnDuration
     ? Math.min(3600, Math.max(3, Math.ceil(content.duration_seconds)))
     : Math.min(3600, Math.max(3, Number($("pk-media-duration").value) || 10));
@@ -546,7 +474,7 @@ function addMediaSlide(content) {
     title: content.name,
     body: "",
     duration: duration,
-    accent: "#f5a623",
+    accent: "#f5a623"
   };
   if (content.type === "video") item.muted = true;
   const items = (playlist.items || []).concat(item);
@@ -564,7 +492,7 @@ $("picker-announcement-form").addEventListener("submit", (e) => {
     title: $("pk-title").value.trim(),
     body: $("pk-body").value.trim(),
     duration: Math.min(3600, Math.max(3, Number($("pk-duration").value) || 10)),
-    accent: $("pk-accent").value,
+    accent: $("pk-accent").value
   };
   const items = (playlist.items || []).concat(item);
   updatePlaylist(playlist.id, { items });
@@ -577,21 +505,13 @@ $("picker-announcement-form").addEventListener("submit", (e) => {
 
 const detailModal = $("detail-modal");
 $("detail-close").addEventListener("click", () => (detailModal.hidden = true));
-detailModal.addEventListener("click", (e) => {
-  if (e.target === detailModal) detailModal.hidden = true;
-});
+detailModal.addEventListener("click", (e) => { if (e.target === detailModal) detailModal.hidden = true; });
 
 function populateVoiceoverOptions(selectedContentId) {
   const select = $("dt-voiceover");
   const audioContent = library.filter((c) => c.type === "audio");
-  select.innerHTML =
-    '<option value="">None</option>' +
-    audioContent
-      .map(
-        (c) =>
-          '<option value="' + c.id + '">' + escapeHtml(c.name) + "</option>"
-      )
-      .join("");
+  select.innerHTML = '<option value="">None</option>' +
+    audioContent.map((c) => '<option value="' + c.id + '">' + escapeHtml(c.name) + "</option>").join("");
   select.value = selectedContentId || "";
 }
 
@@ -626,8 +546,7 @@ function updateDetailMutualExclusion() {
   const voiceoverSelect = $("dt-voiceover");
   voiceoverSelect.disabled = unmuteChecked;
   if (unmuteChecked) voiceoverSelect.value = "";
-  $("dt-unmute").disabled =
-    voiceoverSelect.value !== "" && !unmuteChecked ? true : false;
+  $("dt-unmute").disabled = voiceoverSelect.value !== "" && !unmuteChecked ? true : false;
 }
 
 $("dt-unmute").addEventListener("change", updateDetailMutualExclusion);
@@ -640,9 +559,7 @@ $("detail-form").addEventListener("submit", (e) => {
   if (!playlist) return;
 
   const voiceoverId = $("dt-voiceover").disabled ? "" : $("dt-voiceover").value;
-  const voiceoverContent = voiceoverId
-    ? library.find((c) => c.id === voiceoverId)
-    : null;
+  const voiceoverContent = voiceoverId ? library.find((c) => c.id === voiceoverId) : null;
 
   const items = (playlist.items || []).map((it) => {
     if (it.itemId !== detailEditingItemId) return it;
@@ -650,11 +567,8 @@ $("detail-form").addEventListener("submit", (e) => {
       ...it,
       title: $("dt-title").value.trim(),
       body: $("dt-body").value.trim(),
-      duration: Math.min(
-        3600,
-        Math.max(3, Number($("dt-duration").value) || 10)
-      ),
-      accent: $("dt-accent").value,
+      duration: Math.min(3600, Math.max(3, Number($("dt-duration").value) || 10)),
+      accent: $("dt-accent").value
     };
     if (it.type === "video") {
       patch.muted = !$("dt-unmute").checked;
@@ -679,22 +593,12 @@ $("detail-form").addEventListener("submit", (e) => {
 /* ================= SCREENS ================= */
 
 $("new-screen-btn").addEventListener("click", async () => {
-  const name = prompt(
-    'Name this screen (e.g. "Lobby TV" or "Break room"):',
-    "New screen"
-  );
+  const name = prompt("Name this screen (e.g. \"Lobby TV\" or \"Break room\"):", "New screen");
   if (name === null) return;
-
-  const token = localStorage.getItem("auth_token"); // Retrieve your stored token
-
   await fetch("/api/screens", {
-    credentials: "include",
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    }, // Moved inside the headers object}
-    body: JSON.stringify({ name: name.trim() || "New screen" }),
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name: name.trim() || "New screen" })
   });
 });
 
@@ -712,15 +616,10 @@ function renderScreens() {
 
     const statusTd = document.createElement("td");
     const seenMs = screen.last_seen_at || 0;
-    const online = seenMs && Date.now() - seenMs < 90 * 1000;
-    statusTd.innerHTML =
-      '<span class="status-cell"><span class="dot ' +
-      (online ? "online" : "offline") +
-      '"></span><span></span></span>';
+    const online = seenMs && (Date.now() - seenMs < 90 * 1000);
+    statusTd.innerHTML = '<span class="status-cell"><span class="dot ' + (online ? "online" : "offline") + '"></span><span></span></span>';
     statusTd.querySelector("span span:last-child").textContent = seenMs
-      ? online
-        ? "Online"
-        : "Last seen " + formatRelative(seenMs)
+      ? (online ? "Online" : "Last seen " + formatRelative(seenMs))
       : "Never connected";
     tr.appendChild(statusTd);
 
@@ -731,28 +630,21 @@ function renderScreens() {
 
     const playlistTd = document.createElement("td");
     const select = document.createElement("select");
-    select.innerHTML =
-      '<option value="">Unassigned</option>' +
-      playlists
-        .map(
-          (p) =>
-            '<option value="' + p.id + '">' + escapeHtml(p.name) + "</option>"
-        )
-        .join("");
+    select.innerHTML = '<option value="">Unassigned</option>' +
+      playlists.map((p) => '<option value="' + p.id + '">' + escapeHtml(p.name) + "</option>").join("");
     select.value = screen.playlist_id || "";
     select.addEventListener("change", async () => {
       await fetch("/api/screens/" + screen.id, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ playlistId: select.value || null }),
+        body: JSON.stringify({ playlistId: select.value || null })
       });
     });
     playlistTd.appendChild(select);
     tr.appendChild(playlistTd);
 
     const actionsTd = document.createElement("td");
-    actionsTd.innerHTML =
-      '<span class="row-actions">' +
+    actionsTd.innerHTML = '<span class="row-actions">' +
       '<button class="btn btn-ghost copy-link">Copy player link</button>' +
       '<button class="btn btn-danger remove-screen">Remove</button></span>';
     actionsTd.querySelector(".copy-link").addEventListener("click", (ev) => {
@@ -763,12 +655,10 @@ function renderScreens() {
       btn.textContent = "Copied!";
       setTimeout(() => (btn.textContent = original), 1500);
     });
-    actionsTd
-      .querySelector(".remove-screen")
-      .addEventListener("click", async () => {
-        if (!confirm('Remove screen "' + screen.name + '"?')) return;
-        await fetch("/api/screens/" + screen.id, { method: "DELETE" });
-      });
+    actionsTd.querySelector(".remove-screen").addEventListener("click", async () => {
+      if (!confirm('Remove screen "' + screen.name + '"?')) return;
+      await fetch("/api/screens/" + screen.id, { method: "DELETE" });
+    });
     tr.appendChild(actionsTd);
 
     tbody.appendChild(tr);
@@ -804,23 +694,13 @@ function legacyCopy(text) {
   textarea.focus();
   textarea.select();
   let ok = false;
-  try {
-    ok = document.execCommand("copy");
-  } catch (e) {
-    ok = false;
-  }
+  try { ok = document.execCommand("copy"); } catch (e) { ok = false; }
   document.body.removeChild(textarea);
   if (!ok) prompt("Copy this link manually:", text);
 }
 
 function escapeHtml(str) {
-  return String(str).replace(
-    /[&<>"']/g,
-    (c) =>
-      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[
-        c
-      ])
-  );
+  return String(str).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
 
 checkSession();
