@@ -1,0 +1,30 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    # Requires approval before running — see README's "Requiring approval
+    # before a deploy runs" section for the one-time setup. Without that
+    # setup, this environment reference is a no-op and the deploy runs
+    # immediately on push, same as before.
+    environment: production
+    steps:
+      - name: SSH in and update
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          port: ${{ secrets.VPS_PORT }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          # If you followed the README's key-restriction step, the VPS's
+          # authorized_keys forces this connection to only ever run the
+          # deploy script regardless of what's requested here — this
+          # script field is what actually runs only if you skipped that
+          # hardening step and gave the key normal, unrestricted access.
+          script: |
+            cd ~/${{ secrets.VPS_PROJECT_FOLDER }}
+            bash deploy/update.sh

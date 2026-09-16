@@ -17,6 +17,11 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin";
 const SESSION_SECRET = process.env.SESSION_SECRET || "dev-secret-change-me";
 const IS_PRODUCTION = process.env.NODE_ENV === "production";
 
+// Changes every time the server process starts (including every pm2
+// restart after a deploy). The player polls this to notice a redeploy
+// happened and reload itself automatically — see /api/version below.
+const SERVER_STARTED_AT = Date.now();
+
 const UPLOAD_DIR = path.join(__dirname, "..", "uploads");
 fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 
@@ -87,6 +92,12 @@ app.post("/api/logout", (req, res) => {
 
 app.get("/api/session", (req, res) => {
   res.json({ authenticated: !!(req.session && req.session.authenticated) });
+});
+
+// Public — lets the player notice the server has restarted (a redeploy
+// happened) and reload itself to pick up any new frontend code.
+app.get("/api/version", (req, res) => {
+  res.json({ startedAt: SERVER_STARTED_AT });
 });
 
 /* ================= CONTENT ================= */

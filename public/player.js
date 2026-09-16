@@ -118,6 +118,8 @@ function connectScreen(id) {
   sendHeartbeat();
   setInterval(sendHeartbeat, 25000);
   setInterval(refreshScreen, 30000); // safety net alongside the SSE stream below
+  checkForNewDeploy();
+  setInterval(checkForNewDeploy, 60000); // reload automatically after a redeploy — no one's there to refresh a screen by hand
 
   refreshScreen();
 
@@ -132,6 +134,29 @@ function connectScreen(id) {
       refreshPlaylist();
     }
   };
+}
+
+let knownServerStartedAt = null;
+
+async function checkForNewDeploy() {
+  try {
+    const res = await fetch("/api/version");
+    if (!res.ok) return;
+    const data = await res.json();
+    if (knownServerStartedAt === null) {
+      // First check since this page loaded — just record the baseline,
+      // nothing to compare against yet.
+      knownServerStartedAt = data.startedAt;
+      return;
+    }
+    if (data.startedAt !== knownServerStartedAt) {
+      // The server process has restarted since this page loaded — a
+      // redeploy happened. Reload to pick up whatever changed, rather
+      // than silently running stale frontend code forever with no one
+      // there to notice or refresh it manually.
+      location.reload();
+    }
+  } catch (e) { /* network hiccup — next check will retry */ }
 }
 
 async function refreshScreen() {
