@@ -99,6 +99,17 @@ body {
   z-index: 2;
 }
 
+.bg-blur {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: blur(30px) brightness(0.6);
+  transform: scale(1.1);
+}
+
 .slide-media {
   position: absolute;
   inset: 0;
