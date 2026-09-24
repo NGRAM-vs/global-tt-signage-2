@@ -250,10 +250,12 @@ async function refreshPlaylist() {
       return;
     }
     const data = await res.json();
-    slides = data.items || [];
-    ticker = data.ticker || [];
+    const newSlides = data.items || [];
+    const newTicker = data.ticker || [];
 
-    if (!slides.length) {
+    if (!newSlides.length) {
+      slides = [];
+      ticker = [];
       saveCache();
       stopAllMedia();
       $("waiting-message").textContent =
@@ -262,11 +264,24 @@ async function refreshPlaylist() {
       $("app").hidden = true;
       return;
     }
+
+    // Only rebuild the DOM if the playlist actually changed
+    const changed =
+      JSON.stringify(newSlides) !== JSON.stringify(slides) ||
+      JSON.stringify(newTicker) !== JSON.stringify(ticker);
+
+    slides = newSlides;
+    ticker = newTicker;
+
     $("waiting-screen").hidden = true;
     $("app").hidden = false;
-    renderSlideshow();
-    renderTicker();
-    goTo(0);
+
+    if (changed) {
+      renderSlideshow();
+      renderTicker();
+      goTo(0);
+    }
+
     saveCache();
   } catch (e) {
     setOffline(true);
