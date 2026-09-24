@@ -1,90 +1,109 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Global T &amp; T Digital Signage — Screen</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="tokens.css">
-<link rel="stylesheet" href="player.css">
-</head>
-<body>
-
-<!-- PAIRING SCREEN -->
-<div id="pairing-screen">
-  <div class="pairing-card">
-    <div class="pairing-brand">
-      <div class="brand-mark hero">
-        <img class="brand-badge" src="assets/badge.png" alt="">
-        <span class="brand-text">
-          <span class="brand-name">Global T &amp; T</span>
-          <span class="brand-tag">Digital Signage</span>
-        </span>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Global T &amp; T Digital Signage — Screen</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="tokens.css" />
+    <link rel="stylesheet" href="player.css" />
+  </head>
+  <body>
+    <!-- PAIRING SCREEN -->
+    <div id="pairing-screen">
+      <div class="pairing-card">
+        <div class="pairing-brand">
+          <div class="brand-mark hero">
+            <img class="brand-badge" src="assets/badge.png" alt="" />
+            <span class="brand-text">
+              <span class="brand-name">Global T &amp; T</span>
+              <span class="brand-tag">Digital Signage</span>
+            </span>
+          </div>
+        </div>
+        <p class="pairing-sub">
+          Enter the pairing code shown in your dashboard's Screens tab.
+        </p>
+        <form id="pairing-form">
+          <input
+            id="pairing-code-input"
+            type="text"
+            maxlength="6"
+            autocapitalize="characters"
+            autocomplete="off"
+            placeholder="XXXXXX"
+            required
+          />
+          <button type="submit" class="btn btn-primary">
+            Connect this screen
+          </button>
+        </form>
+        <p id="pairing-error" class="pairing-error" hidden></p>
       </div>
     </div>
-    <p class="pairing-sub">Enter the pairing code shown in your dashboard's Screens tab.</p>
-    <form id="pairing-form">
-      <input id="pairing-code-input" type="text" maxlength="6" autocapitalize="characters" autocomplete="off" placeholder="XXXXXX" required>
-      <button type="submit" class="btn btn-primary">Connect this screen</button>
-    </form>
-    <p id="pairing-error" class="pairing-error" hidden></p>
-  </div>
-</div>
 
-<!-- WAITING FOR PLAYLIST -->
-<div id="waiting-screen" hidden>
-  <div class="waiting-card">
-    <div class="pairing-brand">
-      <div class="brand-mark hero">
-        <img class="brand-badge" src="assets/badge.png" alt="">
-        <span class="brand-text">
-          <span class="brand-name">Global T &amp; T</span>
-          <span class="brand-tag">Digital Signage</span>
-        </span>
+    <!-- WAITING FOR PLAYLIST -->
+    <div id="waiting-screen" hidden>
+      <div class="waiting-card">
+        <div class="pairing-brand">
+          <div class="brand-mark hero">
+            <img class="brand-badge" src="assets/badge.png" alt="" />
+            <span class="brand-text">
+              <span class="brand-name">Global T &amp; T</span>
+              <span class="brand-tag">Digital Signage</span>
+            </span>
+          </div>
+        </div>
+        <p id="waiting-message">
+          This screen is paired. Assign it a playlist from the dashboard's
+          Screens tab to start playback.
+        </p>
+        <p class="waiting-name" id="waiting-screen-name"></p>
       </div>
     </div>
-    <p id="waiting-message">This screen is paired. Assign it a playlist from the dashboard's Screens tab to start playback.</p>
-    <p class="waiting-name" id="waiting-screen-name"></p>
-  </div>
-</div>
 
-<!-- PLAYER -->
-<div id="app" hidden>
-  <div id="stage">
-    <div id="slideshow"></div>
-  </div>
-
-  <div id="top-bar">
-    <div class="brand-mark chip">
-      <img class="brand-badge" src="assets/badge.png" alt="">
-      <span class="brand-text"><span class="brand-name">Global T &amp; T</span></span>
-    </div>
-    <div id="segments"></div>
-    <div id="conn-badge" hidden>Reconnecting…</div>
-  </div>
-
-  <footer id="lower-third">
-    <div class="tally" id="tally">
-      <span class="dot"></span>
-    </div>
-    <div class="datetime">
-      <span id="clock">--:--</span>
-      <span id="date-line">—</span>
-    </div>
-    <div class="weather" id="weather">
-      <span class="weather-icon" id="weather-icon">◌</span>
-      <span id="weather-temp">--°</span>
-      <span id="weather-place" class="dim">locating…</span>
-    </div>
-    <div class="ticker-wrap">
-      <div class="ticker-track">
-        <div class="ticker" id="ticker"></div>
+    <!-- PLAYER -->
+    <div id="app" hidden>
+      <div id="stage">
+        <div id="slideshow"></div>
       </div>
-    </div>
-  </footer>
-</div>
 
-<script type="module" src="player.js"></script>
-</body>
+      <div id="top-bar">
+        <div class="brand-mark chip">
+          <img class="brand-badge" src="assets/badge.png" alt="" />
+          <span class="brand-text"
+            ><span class="brand-name">Global T &amp; T</span></span
+          >
+        </div>
+        <div id="segments"></div>
+        <div id="conn-badge" hidden>Reconnecting…</div>
+      </div>
+
+      <footer id="lower-third">
+        <div class="tally" id="tally">
+          <span class="dot"></span>
+        </div>
+        <div class="datetime">
+          <span id="clock">--:--</span>
+          <span id="date-line">—</span>
+        </div>
+        <div class="weather" id="weather">
+          <span class="weather-icon" id="weather-icon">◌</span>
+          <span id="weather-temp">--°</span>
+          <span id="weather-place" class="dim">locating…</span>
+        </div>
+        <div class="ticker-wrap">
+          <div class="ticker-track">
+            <div class="ticker" id="ticker"></div>
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <script type="module" src="player.js"></script>
+  </body>
 </html>

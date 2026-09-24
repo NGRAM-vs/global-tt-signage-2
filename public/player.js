@@ -18,16 +18,28 @@ function loadCache() {
   try {
     const raw = localStorage.getItem(CACHE_KEY);
     return raw ? JSON.parse(raw) : null;
-  } catch (e) { return null; }
+  } catch (e) {
+    return null;
+  }
 }
 
 function saveCache() {
   try {
-    localStorage.setItem(CACHE_KEY, JSON.stringify({
-      screenId, screenName, playlistId: currentPlaylistId || null,
-      slides, ticker, current, savedAt: Date.now()
-    }));
-  } catch (e) { /* storage unavailable — playback still works, just won't survive an offline reload */ }
+    localStorage.setItem(
+      CACHE_KEY,
+      JSON.stringify({
+        screenId,
+        screenName,
+        playlistId: currentPlaylistId || null,
+        slides,
+        ticker,
+        current,
+        savedAt: Date.now(),
+      })
+    );
+  } catch (e) {
+    /* storage unavailable — playback still works, just won't survive an offline reload */
+  }
 }
 
 function setOffline(value) {
@@ -40,7 +52,10 @@ function setOffline(value) {
 
 async function boot() {
   const savedId = safeGet(STORAGE_KEY);
-  if (!savedId) { showPairing(); return; }
+  if (!savedId) {
+    showPairing();
+    return;
+  }
 
   screenId = savedId;
 
@@ -70,7 +85,8 @@ async function boot() {
     // paired, just don't have anything to show yet, so say so rather
     // than looking blank or reverting to the pairing form.
     $("pairing-screen").hidden = true;
-    $("waiting-message").textContent = "Connecting to the server for the first time…";
+    $("waiting-message").textContent =
+      "Connecting to the server for the first time…";
     $("waiting-screen").hidden = false;
     $("app").hidden = true;
   }
@@ -95,10 +111,11 @@ $("pairing-form").addEventListener("submit", async (e) => {
     const res = await fetch("/api/screens/pair", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ code })
+      body: JSON.stringify({ code }),
     });
     if (!res.ok) {
-      errorEl.textContent = "No screen matches that code. Double-check it in the dashboard.";
+      errorEl.textContent =
+        "No screen matches that code. Double-check it in the dashboard.";
       errorEl.hidden = false;
       return;
     }
@@ -106,7 +123,8 @@ $("pairing-form").addEventListener("submit", async (e) => {
     safeSet(STORAGE_KEY, screen.id);
     connectScreen(screen.id);
   } catch (err) {
-    errorEl.textContent = "Couldn't reach the server. Check the connection and try again.";
+    errorEl.textContent =
+      "Couldn't reach the server. Check the connection and try again.";
     errorEl.hidden = false;
   }
 });
@@ -126,11 +144,22 @@ function connectScreen(id) {
   const es = new EventSource("/api/events");
   es.onmessage = (e) => {
     let payload;
-    try { payload = JSON.parse(e.data); } catch (err) { return; }
-    if (payload.resource === "screens" && (payload.id === screenId || payload.id === null)) {
+    try {
+      payload = JSON.parse(e.data);
+    } catch (err) {
+      return;
+    }
+    if (
+      payload.resource === "screens" &&
+      (payload.id === screenId || payload.id === null)
+    ) {
       refreshScreen();
     }
-    if (payload.resource === "playlists" && currentPlaylistId && (payload.id === currentPlaylistId || payload.id === null)) {
+    if (
+      payload.resource === "playlists" &&
+      currentPlaylistId &&
+      (payload.id === currentPlaylistId || payload.id === null)
+    ) {
       refreshPlaylist();
     }
   };
@@ -156,7 +185,9 @@ async function checkForNewDeploy() {
       // there to notice or refresh it manually.
       location.reload();
     }
-  } catch (e) { /* network hiccup — next check will retry */ }
+  } catch (e) {
+    /* network hiccup — next check will retry */
+  }
 }
 
 async function refreshScreen() {
@@ -167,7 +198,9 @@ async function refreshScreen() {
       // A real 404 means this screen was actually deleted from the admin
       // dashboard — that's the one case where forgetting it is correct.
       safeRemove(STORAGE_KEY);
-      try { localStorage.removeItem(CACHE_KEY); } catch (e) {}
+      try {
+        localStorage.removeItem(CACHE_KEY);
+      } catch (e) {}
       showPairing();
       return;
     }
@@ -179,10 +212,12 @@ async function refreshScreen() {
     if (data.playlist_id !== currentPlaylistId) {
       currentPlaylistId = data.playlist_id || null;
       if (!currentPlaylistId) {
-        slides = []; ticker = [];
+        slides = [];
+        ticker = [];
         saveCache();
         stopAllMedia();
-        $("waiting-message").textContent = "This screen is paired. Assign it a playlist from the dashboard's Screens tab to start playback.";
+        $("waiting-message").textContent =
+          "This screen is paired. Assign it a playlist from the dashboard's Screens tab to start playback.";
         $("waiting-screen").hidden = false;
         $("app").hidden = true;
         return;
@@ -204,10 +239,12 @@ async function refreshPlaylist() {
     const res = await fetch("/api/playlists/" + currentPlaylistId);
     setOffline(false);
     if (!res.ok) {
-      slides = []; ticker = [];
+      slides = [];
+      ticker = [];
       saveCache();
       stopAllMedia();
-      $("waiting-message").textContent = "This screen is paired. Assign it a playlist from the dashboard's Screens tab to start playback.";
+      $("waiting-message").textContent =
+        "This screen is paired. Assign it a playlist from the dashboard's Screens tab to start playback.";
       $("waiting-screen").hidden = false;
       $("app").hidden = true;
       return;
@@ -219,7 +256,8 @@ async function refreshPlaylist() {
     if (!slides.length) {
       saveCache();
       stopAllMedia();
-      $("waiting-message").textContent = "This screen is paired. Assign it a playlist from the dashboard's Screens tab to start playback.";
+      $("waiting-message").textContent =
+        "This screen is paired. Assign it a playlist from the dashboard's Screens tab to start playback.";
       $("waiting-screen").hidden = false;
       $("app").hidden = true;
       return;
@@ -237,12 +275,28 @@ async function refreshPlaylist() {
 
 function sendHeartbeat() {
   if (!screenId) return;
-  fetch("/api/screens/" + screenId + "/heartbeat", { method: "POST" }).catch(() => {});
+  fetch("/api/screens/" + screenId + "/heartbeat", { method: "POST" }).catch(
+    () => {}
+  );
 }
 
-function safeGet(key) { try { return localStorage.getItem(key); } catch (e) { return null; } }
-function safeSet(key, val) { try { localStorage.setItem(key, val); } catch (e) {} }
-function safeRemove(key) { try { localStorage.removeItem(key); } catch (e) {} }
+function safeGet(key) {
+  try {
+    return localStorage.getItem(key);
+  } catch (e) {
+    return null;
+  }
+}
+function safeSet(key, val) {
+  try {
+    localStorage.setItem(key, val);
+  } catch (e) {}
+}
+function safeRemove(key) {
+  try {
+    localStorage.removeItem(key);
+  } catch (e) {}
+}
 
 /* ================= RENDERING ENGINE ================= */
 
@@ -254,13 +308,17 @@ function stopAllMedia() {
   // Removing/hiding these elements alone doesn't reliably stop playback —
   // browsers can keep audio going in the background regardless. Call this
   // before every transition away from the active slideshow.
-  document.querySelectorAll("#slideshow video, #slideshow audio").forEach((el) => {
-    try {
-      el.pause();
-      el.removeAttribute("src");
-      el.load();
-    } catch (e) { /* element already gone or in a bad state — nothing more to do */ }
-  });
+  document
+    .querySelectorAll("#slideshow video, #slideshow audio")
+    .forEach((el) => {
+      try {
+        el.pause();
+        el.removeAttribute("src");
+        el.load();
+      } catch (e) {
+        /* element already gone or in a bad state — nothing more to do */
+      }
+    });
 }
 
 function renderSlideshow() {
@@ -280,7 +338,23 @@ function renderSlideshow() {
     node.style.setProperty("--slide-accent-soft", hexToSoft(slide.accent));
 
     if ((slide.type === "image" || slide.type === "video") && slide.url) {
-      const media = slide.type === "video" ? document.createElement("video") : document.createElement("img");
+      const bgBlur =
+        slide.type === "video"
+          ? document.createElement("video")
+          : document.createElement("img");
+      bgBlur.className = "bg-blur";
+      bgBlur.src = slide.url;
+      if (slide.type === "video") {
+        bgBlur.loop = true;
+        bgBlur.playsInline = true;
+        bgBlur.muted = true;
+        bgBlur.autoplay = true;
+      }
+      node.appendChild(bgBlur);
+      const media =
+        slide.type === "video"
+          ? document.createElement("video")
+          : document.createElement("img");
       media.className = "slide-media";
       media.src = slide.url;
       if (slide.type === "video") {
@@ -327,7 +401,9 @@ function renderSlideshow() {
       (slide.type === "audio"
         ? '<div class="audio-visual"><svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg></div>'
         : "") +
-      '<div class="slide-eyebrow">' + labelForType(slide.type) + "</div>" +
+      '<div class="slide-eyebrow">' +
+      labelForType(slide.type) +
+      "</div>" +
       '<h1 class="slide-title"></h1>' +
       '<p class="slide-body"></p>';
     content.querySelector(".slide-title").textContent = slide.title || "";
@@ -418,7 +494,11 @@ function showSlide(index) {
     const fill = seg.querySelector(".segment-fill");
     seg.classList.remove("active", "done");
     fill.style.transition = "none";
-    if (i < index) { seg.classList.add("done"); } else { fill.style.width = "0%"; }
+    if (i < index) {
+      seg.classList.add("done");
+    } else {
+      fill.style.width = "0%";
+    }
   });
 
   if (segmentEls[index]) {
@@ -428,7 +508,9 @@ function showSlide(index) {
     seg.classList.add("active");
     void fill.offsetWidth;
     fill.style.transition = "width " + duration + "s linear";
-    requestAnimationFrame(() => { fill.style.width = "100%"; });
+    requestAnimationFrame(() => {
+      fill.style.width = "100%";
+    });
   }
 }
 
@@ -451,8 +533,16 @@ function scheduleNext() {
 
 function tickClock() {
   const now = new Date();
-  $("clock").textContent = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
-  $("date-line").textContent = now.toLocaleDateString([], { weekday: "long", month: "long", day: "numeric" });
+  $("clock").textContent = now.toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
+  $("date-line").textContent = now.toLocaleDateString([], {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  });
 }
 tickClock();
 setInterval(tickClock, 1000);
@@ -460,20 +550,37 @@ setInterval(tickClock, 1000);
 /* ---------- weather (Open-Meteo, no API key) ---------- */
 
 const WEATHER_ICONS = {
-  0: "☀️", 1: "🌤️", 2: "⛅", 3: "☁️",
-  45: "🌫️", 48: "🌫️",
-  51: "🌦️", 53: "🌦️", 55: "🌦️",
-  61: "🌧️", 63: "🌧️", 65: "🌧️",
-  71: "🌨️", 73: "🌨️", 75: "🌨️",
-  80: "🌦️", 81: "🌧️", 82: "⛈️",
-  95: "⛈️", 96: "⛈️", 99: "⛈️"
+  0: "☀️",
+  1: "🌤️",
+  2: "⛅",
+  3: "☁️",
+  45: "🌫️",
+  48: "🌫️",
+  51: "🌦️",
+  53: "🌦️",
+  55: "🌦️",
+  61: "🌧️",
+  63: "🌧️",
+  65: "🌧️",
+  71: "🌨️",
+  73: "🌨️",
+  75: "🌨️",
+  80: "🌦️",
+  81: "🌧️",
+  82: "⛈️",
+  95: "⛈️",
+  96: "⛈️",
+  99: "⛈️",
 };
 
 async function loadWeather(lat, lon, place) {
   try {
     const res = await fetch(
-      "https://api.open-meteo.com/v1/forecast?latitude=" + lat + "&longitude=" + lon +
-      "&current=temperature_2m,weather_code&temperature_unit=celsius"
+      "https://api.open-meteo.com/v1/forecast?latitude=" +
+        lat +
+        "&longitude=" +
+        lon +
+        "&current=temperature_2m,weather_code&temperature_unit=celsius"
     );
     const data = await res.json();
     const temp = Math.round(data.current.temperature_2m);
@@ -508,7 +615,8 @@ function renderTicker() {
 /* keep the display awake and tidy on fullscreen kiosks */
 document.addEventListener("keydown", (e) => {
   if (e.key === "f" || e.key === "F") {
-    if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {});
+    if (!document.fullscreenElement)
+      document.documentElement.requestFullscreen().catch(() => {});
     else document.exitFullscreen().catch(() => {});
   }
 });
