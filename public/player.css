@@ -92,6 +92,7 @@ body {
   transition: opacity 1.1s ease, transform 8s linear;
   display: flex;
   align-items: flex-end;
+  z-index: 1; /* explicit baseline for every slide, not just active ones */
 }
 .slide.active {
   opacity: 1;
