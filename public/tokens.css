@@ -15,15 +15,20 @@
   --radius: 12px;
 }
 
-* { box-sizing: border-box; }
+* {
+  box-sizing: border-box;
+}
 
 /* Several elements below set an explicit `display` (flex/grid) for when
    they're visible, which — without this — can outrank the browser's
    default handling of the `hidden` attribute. This guarantees `hidden`
    always wins, everywhere, regardless of what else targets the element. */
-[hidden] { display: none !important; }
+[hidden] {
+  display: none !important;
+}
 
-html, body {
+html,
+body {
   margin: 0;
   padding: 0;
   background: var(--bg);
@@ -31,11 +36,25 @@ html, body {
   font-family: var(--font-body);
 }
 
-::-webkit-scrollbar { width: 10px; height: 10px; }
-::-webkit-scrollbar-thumb { background: #263250; border-radius: 8px; }
-::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: #263250;
+  border-radius: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
 
-button, input, select, textarea { font: inherit; color: inherit; }
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
 
 .btn {
   font-weight: 600;
@@ -49,17 +68,44 @@ button, input, select, textarea { font: inherit; color: inherit; }
   gap: 8px;
   transition: filter 0.15s ease, background 0.15s ease, transform 0.1s ease;
 }
-.btn:active { transform: translateY(1px); }
-.btn-primary { background: var(--accent); color: #1a1204; }
-.btn-primary:hover { filter: brightness(1.08); }
-.btn-ghost { background: transparent; border-color: var(--line); color: var(--text); }
-.btn-ghost:hover { background: var(--bg-elevated); }
-.btn-danger { background: transparent; border-color: var(--line); color: var(--live-red); }
-.btn-danger:hover { background: rgba(230, 69, 69, 0.1); }
-.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn:active {
+  transform: translateY(1px);
+}
+.btn-primary {
+  background: var(--accent);
+  color: #1a1204;
+}
+.btn-primary:hover {
+  filter: brightness(1.08);
+}
+.btn-ghost {
+  background: transparent;
+  border-color: var(--line);
+  color: var(--text);
+}
+.btn-ghost:hover {
+  background: var(--bg-elevated);
+}
+.btn-danger {
+  background: transparent;
+  border-color: var(--line);
+  color: var(--live-red);
+}
+.btn-danger:hover {
+  background: rgba(230, 69, 69, 0.1);
+}
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
 
-input[type="text"], input[type="email"], input[type="password"],
-input[type="number"], input[type="url"], select, textarea {
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="url"],
+select,
+textarea {
   background: var(--bg-elevated);
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -67,13 +113,29 @@ input[type="number"], input[type="url"], select, textarea {
   font-size: 14px;
   width: 100%;
 }
-input:focus, select:focus, textarea:focus {
+input:focus,
+select:focus,
+textarea:focus {
   outline: 2px solid var(--accent);
   outline-offset: 1px;
 }
-label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--text-dim); }
-label.checkbox-label span { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--text); }
-label.checkbox-label input[type="checkbox"] { width: auto; }
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+label.checkbox-label span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--text);
+}
+label.checkbox-label input[type="checkbox"] {
+  width: auto;
+}
 
 .tag {
   display: inline-flex;
@@ -89,16 +151,29 @@ label.checkbox-label input[type="checkbox"] { width: auto; }
 }
 
 .dot {
-  width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  flex: none;
 }
-.dot.online { background: var(--green); box-shadow: 0 0 0 3px rgba(79, 209, 139, 0.18); }
-.dot.offline { background: var(--text-dim); }
+.dot.online {
+  background: var(--green);
+  box-shadow: 0 0 0 3px rgba(79, 209, 139, 0.18);
+}
+.dot.offline {
+  background: var(--text-dim);
+}
 
 /* ---------- Brand mark ---------- */
 /* Icon badge is an image (public/assets/badge.png); the wordmark stays as
    real text built from the app's own tokens for crispness and easy editing. */
 
-.brand-mark { display: flex; align-items: center; gap: 20px; }
+.brand-mark {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
 
 .brand-badge {
   flex: none;
@@ -108,7 +183,11 @@ label.checkbox-label input[type="checkbox"] { width: auto; }
   object-fit: contain;
 }
 
-.brand-text { display: flex; flex-direction: column; line-height: 1.2; }
+.brand-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
 .brand-name {
   font-family: var(--font-display);
   font-weight: 700;
@@ -128,20 +207,48 @@ label.checkbox-label input[type="checkbox"] { width: auto; }
   text-transform: uppercase;
   color: var(--accent);
 }
-.brand-tag::before { content: ""; width: 14px; height: 2px; background: var(--accent); display: inline-block; }
+.brand-tag::before {
+  content: "";
+  width: 14px;
+  height: 2px;
+  background: var(--accent);
+  display: inline-block;
+}
 
 /* Large, centered — login screen, pairing/waiting screens, landing page */
-.brand-mark.hero { flex-direction: column; align-items: center; gap: 22px; }
-.brand-mark.hero .brand-badge { width: 68px; height: 68px; }
-.brand-mark.hero .brand-text { align-items: center; }
-.brand-mark.hero .brand-name { font-size: 26px; }
-.brand-mark.hero .brand-tag { font-size: 11px; }
+.brand-mark.hero {
+  flex-direction: column;
+  align-items: center;
+  gap: 22px;
+}
+.brand-mark.hero .brand-badge {
+  width: 68px;
+  height: 68px;
+}
+.brand-mark.hero .brand-text {
+  align-items: center;
+}
+.brand-mark.hero .brand-name {
+  font-size: 26px;
+}
+.brand-mark.hero .brand-tag {
+  font-size: 11px;
+}
 
 /* Compact — sidebar */
-.brand-mark.compact { gap: 14px; }
-.brand-mark.compact .brand-badge { width: 30px; height: 30px; }
-.brand-mark.compact .brand-name { font-size: 14px; }
-.brand-mark.compact .brand-tag { display: none; }
+.brand-mark.compact {
+  gap: 14px;
+}
+.brand-mark.compact .brand-badge {
+  width: 30px;
+  height: 30px;
+}
+.brand-mark.compact .brand-name {
+  font-size: 14px;
+}
+.brand-mark.compact .brand-tag {
+  display: none;
+}
 
 /* Solid chip — sits directly on the slideshow, opaque so it's legible over any image/video */
 .brand-mark.chip {
@@ -152,6 +259,13 @@ label.checkbox-label input[type="checkbox"] { width: auto; }
   border-radius: 10px;
   padding: 7px 18px 7px 7px;
 }
-.brand-mark.chip .brand-badge { width: 34px; height: 34px; }
-.brand-mark.chip .brand-name { font-size: 14px; }
-.brand-mark.chip .brand-tag { display: none; }
+.brand-mark.chip .brand-badge {
+  width: 34px;
+  height: 34px;
+}
+.brand-mark.chip .brand-name {
+  font-size: 14px;
+}
+.brand-mark.chip .brand-tag {
+  display: none;
+}

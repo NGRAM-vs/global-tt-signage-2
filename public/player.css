@@ -349,15 +349,15 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--accent-soft);
+  background: var(--bg);
   border: 1px solid var(--accent);
   border-radius: 10px;
   padding: 6px;
 }
 
 .ticker-logo {
-  width: 42px;
-  height: 42px;
+  width: 62px;
+  height: 62px;
   object-fit: contain;
   display: block;
 }
