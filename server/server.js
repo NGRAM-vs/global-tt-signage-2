@@ -211,16 +211,6 @@ function serializePlaylist(row) {
     name: row.name,
     items: JSON.parse(row.items),
     ticker: JSON.parse(row.ticker),
-    created_at: row.created_at,
-  };
-}
-
-function serializePlaylist(row) {
-  return {
-    id: row.id,
-    name: row.name,
-    items: JSON.parse(row.items),
-    ticker: JSON.parse(row.ticker),
     tickerLogo: row.ticker_logo || null, // <-- add this line
     created_at: row.created_at,
   };
