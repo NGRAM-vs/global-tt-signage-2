@@ -624,12 +624,13 @@ setInterval(initWeather, 30 * 60 * 1000);
 /* ---------- ticker ---------- */
 
 function setTickerLogo(url) {
+  const frameEl = $("ticker-logo-frame");
   const logoEl = $("ticker-logo");
   if (url) {
     logoEl.src = url;
-    logoEl.hidden = false;
+    frameEl.hidden = false;
   } else {
-    logoEl.hidden = true;
+    frameEl.hidden = true;
   }
 }
 
