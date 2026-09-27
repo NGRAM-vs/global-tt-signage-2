@@ -78,6 +78,7 @@ body {
   position: absolute;
   inset: 0 0 96px 0;
   background: #000;
+  overflow: hidden;
 }
 #slideshow {
   position: absolute;
