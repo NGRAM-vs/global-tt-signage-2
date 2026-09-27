@@ -346,10 +346,10 @@ body {
 }
 .ticker-logo {
   flex: none;
-  width: 50px;
-  height: 50px;
+  width: 64px;
+  height: 64px;
   object-fit: contain;
-  border-radius: 50px;
+  border-radius: 70px;
 }
 .ticker-track {
   overflow: hidden;
