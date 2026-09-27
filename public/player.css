@@ -344,7 +344,7 @@ body {
   overflow: hidden;
   height: 100%;
 }
-.ticker-logo-frame {
+#ticker-logo-frame.ticker-logo-frame {
   flex: none;
   display: flex;
   align-items: center;
