@@ -11,7 +11,7 @@ const pool = process.env.DATABASE_URL
   ? new Pool({
       connectionString: process.env.DATABASE_URL,
       ssl: { rejectUnauthorized: false }, // most managed providers require SSL with a non-strict cert chain
-      max: 10
+      max: 10,
     })
   : new Pool({
       host: process.env.DB_HOST || "127.0.0.1",
@@ -19,7 +19,7 @@ const pool = process.env.DATABASE_URL
       user: process.env.DB_USER || "postgres",
       password: process.env.DB_PASSWORD || "",
       database: process.env.DB_NAME || "signal_signage",
-      max: 10
+      max: 10,
     });
 
 // Creates the tables if they don't exist yet. Called once at server startup.
@@ -56,6 +56,14 @@ async function init() {
       created_at BIGINT NOT NULL
     )
   `);
+
+  const existingPlaylistCols = await pool.query(
+    `SELECT column_name FROM information_schema.columns
+     WHERE table_schema = current_schema() AND table_name = 'playlists' AND column_name = 'ticker_logo'`
+  );
+  if (existingPlaylistCols.rows.length === 0) {
+    await pool.query(`ALTER TABLE playlists ADD COLUMN ticker_logo TEXT`);
+  }
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS screens (
