@@ -57,6 +57,14 @@ async function init() {
     )
   `);
 
+  const existingPlaylistCols = await pool.query(
+    `SELECT column_name FROM information_schema.columns
+     WHERE table_schema = current_schema() AND table_name = 'playlists' AND column_name = 'ticker_logo'`
+  );
+  if (existingPlaylistCols.rows.length === 0) {
+    await pool.query(`ALTER TABLE playlists ADD COLUMN ticker_logo TEXT`);
+  }
+
   await pool.query(`
     CREATE TABLE IF NOT EXISTS screens (
       id VARCHAR(36) PRIMARY KEY,
