@@ -344,6 +344,13 @@ body {
   overflow: hidden;
   height: 100%;
 }
+.ticker-logo {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  border-radius: 4px;
+}
 .ticker-track {
   overflow: hidden;
   width: 100%;

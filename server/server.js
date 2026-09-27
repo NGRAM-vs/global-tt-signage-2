@@ -40,8 +40,8 @@ app.use(
     cookie: {
       httpOnly: true,
       maxAge: 1000 * 60 * 60 * 24 * 30, // 30 days
-      secure: IS_PRODUCTION // only sent over HTTPS once deployed
-    }
+      secure: IS_PRODUCTION, // only sent over HTTPS once deployed
+    },
   })
 );
 
@@ -61,7 +61,9 @@ const guessLimiter = rateLimit({
   max: 15,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { error: "Too many attempts — please wait a few minutes and try again." }
+  message: {
+    error: "Too many attempts — please wait a few minutes and try again.",
+  },
 });
 
 // Wraps an async route handler so a rejected promise (e.g. a database error)
@@ -107,106 +109,219 @@ const upload = multer({
     destination: UPLOAD_DIR,
     filename: (req, file, cb) => {
       const safe = file.originalname.replace(/[^a-zA-Z0-9.\-_]/g, "_");
-      cb(null, Date.now() + "-" + crypto.randomBytes(4).toString("hex") + "-" + safe);
-    }
+      cb(
+        null,
+        Date.now() + "-" + crypto.randomBytes(4).toString("hex") + "-" + safe
+      );
+    },
   }),
-  limits: { fileSize: 500 * 1024 * 1024 } // 500MB per file, generous for signage video
+  limits: { fileSize: 500 * 1024 * 1024 }, // 500MB per file, generous for signage video
 });
 
-app.get("/api/content", asyncRoute(async (req, res) => {
-  const { rows } = await pool.query("SELECT * FROM content ORDER BY created_at DESC");
-  res.json(rows);
-}));
-
-app.post("/api/content", requireAuth, upload.array("files", 20), asyncRoute(async (req, res) => {
-  const files = req.files || [];
-  // Parallel array of detected durations (seconds), sent by the browser
-  // since it already has to load each file locally before uploading it.
-  let durations = [];
-  try { durations = JSON.parse(req.body.durations || "[]"); } catch (e) { durations = []; }
-
-  const created = [];
-  for (let i = 0; i < files.length; i++) {
-    const file = files[i];
-    const id = crypto.randomUUID();
-    const type = file.mimetype.startsWith("video") ? "video" : file.mimetype.startsWith("audio") ? "audio" : "image";
-    const url = "/uploads/" + file.filename;
-    const createdAt = Date.now();
-    const durationSeconds = (typeof durations[i] === "number" && durations[i] > 0) ? durations[i] : null;
-    await pool.query(
-      "INSERT INTO content (id, name, type, url, filename, size, duration_seconds, created_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)",
-      [id, file.originalname, type, url, file.filename, file.size, durationSeconds, createdAt]
+app.get(
+  "/api/content",
+  asyncRoute(async (req, res) => {
+    const { rows } = await pool.query(
+      "SELECT * FROM content ORDER BY created_at DESC"
     );
-    created.push({
-      id, name: file.originalname, type, url, filename: file.filename,
-      size: file.size, duration_seconds: durationSeconds, created_at: createdAt
-    });
-  }
-  broadcast("content", "create", null);
-  res.json(created);
-}));
+    res.json(rows);
+  })
+);
 
-app.delete("/api/content/:id", requireAuth, asyncRoute(async (req, res) => {
-  const { rows } = await pool.query("SELECT * FROM content WHERE id = $1", [req.params.id]);
-  const row = rows[0];
-  if (!row) return res.status(404).json({ error: "Not found" });
-  await pool.query("DELETE FROM content WHERE id = $1", [req.params.id]);
-  fs.unlink(path.join(UPLOAD_DIR, row.filename), () => {}); // ignore if already gone
-  broadcast("content", "delete", req.params.id);
-  res.json({ ok: true });
-}));
+app.post(
+  "/api/content",
+  requireAuth,
+  upload.array("files", 20),
+  asyncRoute(async (req, res) => {
+    const files = req.files || [];
+    // Parallel array of detected durations (seconds), sent by the browser
+    // since it already has to load each file locally before uploading it.
+    let durations = [];
+    try {
+      durations = JSON.parse(req.body.durations || "[]");
+    } catch (e) {
+      durations = [];
+    }
+
+    const created = [];
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const id = crypto.randomUUID();
+      const type = file.mimetype.startsWith("video")
+        ? "video"
+        : file.mimetype.startsWith("audio")
+        ? "audio"
+        : "image";
+      const url = "/uploads/" + file.filename;
+      const createdAt = Date.now();
+      const durationSeconds =
+        typeof durations[i] === "number" && durations[i] > 0
+          ? durations[i]
+          : null;
+      await pool.query(
+        "INSERT INTO content (id, name, type, url, filename, size, duration_seconds, created_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)",
+        [
+          id,
+          file.originalname,
+          type,
+          url,
+          file.filename,
+          file.size,
+          durationSeconds,
+          createdAt,
+        ]
+      );
+      created.push({
+        id,
+        name: file.originalname,
+        type,
+        url,
+        filename: file.filename,
+        size: file.size,
+        duration_seconds: durationSeconds,
+        created_at: createdAt,
+      });
+    }
+    broadcast("content", "create", null);
+    res.json(created);
+  })
+);
+
+app.delete(
+  "/api/content/:id",
+  requireAuth,
+  asyncRoute(async (req, res) => {
+    const { rows } = await pool.query("SELECT * FROM content WHERE id = $1", [
+      req.params.id,
+    ]);
+    const row = rows[0];
+    if (!row) return res.status(404).json({ error: "Not found" });
+    await pool.query("DELETE FROM content WHERE id = $1", [req.params.id]);
+    fs.unlink(path.join(UPLOAD_DIR, row.filename), () => {}); // ignore if already gone
+    broadcast("content", "delete", req.params.id);
+    res.json({ ok: true });
+  })
+);
 
 /* ================= PLAYLISTS ================= */
 
 function serializePlaylist(row) {
-  return { id: row.id, name: row.name, items: JSON.parse(row.items), ticker: JSON.parse(row.ticker), created_at: row.created_at };
+  return {
+    id: row.id,
+    name: row.name,
+    items: JSON.parse(row.items),
+    ticker: JSON.parse(row.ticker),
+    created_at: row.created_at,
+  };
 }
 
-app.get("/api/playlists", asyncRoute(async (req, res) => {
-  const { rows } = await pool.query("SELECT * FROM playlists ORDER BY created_at DESC");
-  res.json(rows.map(serializePlaylist));
-}));
+function serializePlaylist(row) {
+  return {
+    id: row.id,
+    name: row.name,
+    items: JSON.parse(row.items),
+    ticker: JSON.parse(row.ticker),
+    tickerLogo: row.ticker_logo || null, // <-- add this line
+    created_at: row.created_at,
+  };
+}
 
-app.get("/api/playlists/:id", asyncRoute(async (req, res) => {
-  const { rows } = await pool.query("SELECT * FROM playlists WHERE id = $1", [req.params.id]);
-  const row = rows[0];
-  if (!row) return res.status(404).json({ error: "Not found" });
-  res.json(serializePlaylist(row));
-}));
+app.get(
+  "/api/playlists",
+  asyncRoute(async (req, res) => {
+    const { rows } = await pool.query(
+      "SELECT * FROM playlists ORDER BY created_at DESC"
+    );
+    res.json(rows.map(serializePlaylist));
+  })
+);
 
-app.post("/api/playlists", requireAuth, asyncRoute(async (req, res) => {
-  const id = crypto.randomUUID();
-  const name = (req.body && req.body.name) || "Untitled playlist";
-  const createdAt = Date.now();
-  await pool.query(
-    "INSERT INTO playlists (id, name, items, ticker, created_at) VALUES ($1,$2,$3,$4,$5)",
-    [id, name, "[]", "[]", createdAt]
-  );
-  broadcast("playlists", "create", id);
-  res.json(serializePlaylist({ id, name, items: "[]", ticker: "[]", created_at: createdAt }));
-}));
+app.get(
+  "/api/playlists/:id",
+  asyncRoute(async (req, res) => {
+    const { rows } = await pool.query("SELECT * FROM playlists WHERE id = $1", [
+      req.params.id,
+    ]);
+    const row = rows[0];
+    if (!row) return res.status(404).json({ error: "Not found" });
+    res.json(serializePlaylist(row));
+  })
+);
 
-app.patch("/api/playlists/:id", requireAuth, asyncRoute(async (req, res) => {
-  const { rows } = await pool.query("SELECT * FROM playlists WHERE id = $1", [req.params.id]);
-  const row = rows[0];
-  if (!row) return res.status(404).json({ error: "Not found" });
-  const patch = req.body || {};
-  const name = patch.name !== undefined ? patch.name : row.name;
-  const items = patch.items !== undefined ? JSON.stringify(patch.items) : row.items;
-  const ticker = patch.ticker !== undefined ? JSON.stringify(patch.ticker) : row.ticker;
-  await pool.query("UPDATE playlists SET name = $1, items = $2, ticker = $3 WHERE id = $4", [name, items, ticker, req.params.id]);
-  broadcast("playlists", "update", req.params.id);
-  res.json(serializePlaylist({ id: row.id, name, items, ticker, created_at: row.created_at }));
-}));
+app.post(
+  "/api/playlists",
+  requireAuth,
+  asyncRoute(async (req, res) => {
+    const id = crypto.randomUUID();
+    const name = (req.body && req.body.name) || "Untitled playlist";
+    const createdAt = Date.now();
+    await pool.query(
+      "INSERT INTO playlists (id, name, items, ticker, created_at) VALUES ($1,$2,$3,$4,$5)",
+      [id, name, "[]", "[]", createdAt]
+    );
+    broadcast("playlists", "create", id);
+    res.json(
+      serializePlaylist({
+        id,
+        name,
+        items: "[]",
+        ticker: "[]",
+        created_at: createdAt,
+      })
+    );
+  })
+);
 
-app.delete("/api/playlists/:id", requireAuth, asyncRoute(async (req, res) => {
-  await pool.query("DELETE FROM playlists WHERE id = $1", [req.params.id]);
-  // unassign any screen pointed at this playlist
-  await pool.query("UPDATE screens SET playlist_id = NULL WHERE playlist_id = $1", [req.params.id]);
-  broadcast("playlists", "delete", req.params.id);
-  broadcast("screens", "update", null);
-  res.json({ ok: true });
-}));
+app.patch(
+  "/api/playlists/:id",
+  requireAuth,
+  asyncRoute(async (req, res) => {
+    const { rows } = await pool.query("SELECT * FROM playlists WHERE id = $1", [
+      req.params.id,
+    ]);
+    const row = rows[0];
+    if (!row) return res.status(404).json({ error: "Not found" });
+    const patch = req.body || {};
+    const name = patch.name !== undefined ? patch.name : row.name;
+    const items =
+      patch.items !== undefined ? JSON.stringify(patch.items) : row.items;
+    const ticker =
+      patch.ticker !== undefined ? JSON.stringify(patch.ticker) : row.ticker;
+    const tickerLogo =
+      patch.tickerLogo !== undefined ? patch.tickerLogo : row.ticker_logo; // <-- add this line
+    await pool.query(
+      "UPDATE playlists SET name = $1, items = $2, ticker = $3, ticker_logo = $4 WHERE id = $5", // <-- add ticker_logo = $4, shift id to $5
+      [name, items, ticker, tickerLogo, req.params.id] // <-- add tickerLogo, keep req.params.id last
+    );
+    broadcast("playlists", "update", req.params.id);
+    res.json(
+      serializePlaylist({
+        id: row.id,
+        name,
+        items,
+        ticker,
+        ticker_logo: tickerLogo,
+        created_at: row.created_at,
+      })
+    ); // <-- add ticker_logo here too
+  })
+);
+
+app.delete(
+  "/api/playlists/:id",
+  requireAuth,
+  asyncRoute(async (req, res) => {
+    await pool.query("DELETE FROM playlists WHERE id = $1", [req.params.id]);
+    // unassign any screen pointed at this playlist
+    await pool.query(
+      "UPDATE screens SET playlist_id = NULL WHERE playlist_id = $1",
+      [req.params.id]
+    );
+    broadcast("playlists", "delete", req.params.id);
+    broadcast("screens", "update", null);
+    res.json({ ok: true });
+  })
+);
 
 /* ================= SCREENS ================= */
 
@@ -215,75 +330,130 @@ async function generatePairingCode() {
   let code;
   let exists = true;
   while (exists) {
-    code = Array.from({ length: 6 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
-    const { rows } = await pool.query("SELECT 1 FROM screens WHERE pairing_code = $1", [code]);
+    code = Array.from(
+      { length: 6 },
+      () => chars[Math.floor(Math.random() * chars.length)]
+    ).join("");
+    const { rows } = await pool.query(
+      "SELECT 1 FROM screens WHERE pairing_code = $1",
+      [code]
+    );
     exists = rows.length > 0;
   }
   return code;
 }
 
-app.get("/api/screens", requireAuth, asyncRoute(async (req, res) => {
-  const { rows } = await pool.query("SELECT * FROM screens ORDER BY created_at DESC");
-  res.json(rows);
-}));
+app.get(
+  "/api/screens",
+  requireAuth,
+  asyncRoute(async (req, res) => {
+    const { rows } = await pool.query(
+      "SELECT * FROM screens ORDER BY created_at DESC"
+    );
+    res.json(rows);
+  })
+);
 
-app.get("/api/screens/:id", asyncRoute(async (req, res) => {
-  const { rows } = await pool.query("SELECT * FROM screens WHERE id = $1", [req.params.id]);
-  const row = rows[0];
-  if (!row) return res.status(404).json({ error: "Not found" });
-  res.json(row);
-}));
+app.get(
+  "/api/screens/:id",
+  asyncRoute(async (req, res) => {
+    const { rows } = await pool.query("SELECT * FROM screens WHERE id = $1", [
+      req.params.id,
+    ]);
+    const row = rows[0];
+    if (!row) return res.status(404).json({ error: "Not found" });
+    res.json(row);
+  })
+);
 
-app.post("/api/screens", requireAuth, asyncRoute(async (req, res) => {
-  const id = crypto.randomUUID();
-  const name = (req.body && req.body.name) || "New screen";
-  const pairingCode = await generatePairingCode();
-  const createdAt = Date.now();
-  await pool.query(
-    "INSERT INTO screens (id, name, pairing_code, playlist_id, last_seen_at, status, created_at) VALUES ($1,$2,$3,$4,$5,$6,$7)",
-    [id, name, pairingCode, null, null, null, createdAt]
-  );
-  broadcast("screens", "create", id);
-  res.json({ id, name, pairing_code: pairingCode, playlist_id: null, last_seen_at: null, status: null, created_at: createdAt });
-}));
+app.post(
+  "/api/screens",
+  requireAuth,
+  asyncRoute(async (req, res) => {
+    const id = crypto.randomUUID();
+    const name = (req.body && req.body.name) || "New screen";
+    const pairingCode = await generatePairingCode();
+    const createdAt = Date.now();
+    await pool.query(
+      "INSERT INTO screens (id, name, pairing_code, playlist_id, last_seen_at, status, created_at) VALUES ($1,$2,$3,$4,$5,$6,$7)",
+      [id, name, pairingCode, null, null, null, createdAt]
+    );
+    broadcast("screens", "create", id);
+    res.json({
+      id,
+      name,
+      pairing_code: pairingCode,
+      playlist_id: null,
+      last_seen_at: null,
+      status: null,
+      created_at: createdAt,
+    });
+  })
+);
 
-app.patch("/api/screens/:id", requireAuth, asyncRoute(async (req, res) => {
-  const { rows } = await pool.query("SELECT * FROM screens WHERE id = $1", [req.params.id]);
-  const row = rows[0];
-  if (!row) return res.status(404).json({ error: "Not found" });
-  const patch = req.body || {};
-  const name = patch.name !== undefined ? patch.name : row.name;
-  const playlistId = patch.playlistId !== undefined ? patch.playlistId : row.playlist_id;
-  await pool.query("UPDATE screens SET name = $1, playlist_id = $2 WHERE id = $3", [name, playlistId, req.params.id]);
-  broadcast("screens", "update", req.params.id);
-  res.json({ ok: true });
-}));
+app.patch(
+  "/api/screens/:id",
+  requireAuth,
+  asyncRoute(async (req, res) => {
+    const { rows } = await pool.query("SELECT * FROM screens WHERE id = $1", [
+      req.params.id,
+    ]);
+    const row = rows[0];
+    if (!row) return res.status(404).json({ error: "Not found" });
+    const patch = req.body || {};
+    const name = patch.name !== undefined ? patch.name : row.name;
+    const playlistId =
+      patch.playlistId !== undefined ? patch.playlistId : row.playlist_id;
+    await pool.query(
+      "UPDATE screens SET name = $1, playlist_id = $2 WHERE id = $3",
+      [name, playlistId, req.params.id]
+    );
+    broadcast("screens", "update", req.params.id);
+    res.json({ ok: true });
+  })
+);
 
-app.delete("/api/screens/:id", requireAuth, asyncRoute(async (req, res) => {
-  await pool.query("DELETE FROM screens WHERE id = $1", [req.params.id]);
-  broadcast("screens", "delete", req.params.id);
-  res.json({ ok: true });
-}));
+app.delete(
+  "/api/screens/:id",
+  requireAuth,
+  asyncRoute(async (req, res) => {
+    await pool.query("DELETE FROM screens WHERE id = $1", [req.params.id]);
+    broadcast("screens", "delete", req.params.id);
+    res.json({ ok: true });
+  })
+);
 
 // Public: a screen looks itself up by the code typed in on the pairing form
-app.post("/api/screens/pair", guessLimiter, asyncRoute(async (req, res) => {
-  const code = ((req.body && req.body.code) || "").trim().toUpperCase();
-  const { rows } = await pool.query("SELECT * FROM screens WHERE pairing_code = $1", [code]);
-  const row = rows[0];
-  if (!row) return res.status(404).json({ error: "No screen matches that code" });
-  res.json(row);
-}));
+app.post(
+  "/api/screens/pair",
+  guessLimiter,
+  asyncRoute(async (req, res) => {
+    const code = ((req.body && req.body.code) || "").trim().toUpperCase();
+    const { rows } = await pool.query(
+      "SELECT * FROM screens WHERE pairing_code = $1",
+      [code]
+    );
+    const row = rows[0];
+    if (!row)
+      return res.status(404).json({ error: "No screen matches that code" });
+    res.json(row);
+  })
+);
 
 // Public: a screen calls this periodically to report itself online
-app.post("/api/screens/:id/heartbeat", asyncRoute(async (req, res) => {
-  const result = await pool.query(
-    "UPDATE screens SET last_seen_at = $1, status = 'online' WHERE id = $2",
-    [Date.now(), req.params.id]
-  );
-  if (result.rowCount === 0) return res.status(404).json({ error: "Not found" });
-  broadcast("screens", "heartbeat", req.params.id);
-  res.json({ ok: true });
-}));
+app.post(
+  "/api/screens/:id/heartbeat",
+  asyncRoute(async (req, res) => {
+    const result = await pool.query(
+      "UPDATE screens SET last_seen_at = $1, status = 'online' WHERE id = $2",
+      [Date.now(), req.params.id]
+    );
+    if (result.rowCount === 0)
+      return res.status(404).json({ error: "Not found" });
+    broadcast("screens", "heartbeat", req.params.id);
+    res.json({ ok: true });
+  })
+);
 
 /* ================= LIVE UPDATES (SSE) ================= */
 
@@ -291,7 +461,7 @@ app.get("/api/events", (req, res) => {
   res.writeHead(200, {
     "Content-Type": "text/event-stream",
     "Cache-Control": "no-cache",
-    Connection: "keep-alive"
+    Connection: "keep-alive",
   });
   res.write("\n");
 
@@ -312,11 +482,15 @@ app.get("/api/events", (req, res) => {
 init()
   .then(() => {
     app.listen(PORT, () => {
-      console.log("Global T & T Digital Signage is running at http://localhost:" + PORT);
+      console.log(
+        "Global T & T Digital Signage is running at http://localhost:" + PORT
+      );
     });
   })
   .catch((err) => {
-    console.error("Could not connect to PostgreSQL — check your .env DB_* settings and that the server is reachable.");
+    console.error(
+      "Could not connect to PostgreSQL — check your .env DB_* settings and that the server is reachable."
+    );
     console.error(err.message);
     process.exit(1);
   });

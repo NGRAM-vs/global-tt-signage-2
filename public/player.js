@@ -68,6 +68,7 @@ async function boot() {
     currentPlaylistId = cached.playlistId;
     slides = cached.slides || [];
     ticker = cached.ticker || [];
+    setTickerLogo(cached.tickerLogo || null);
     $("pairing-screen").hidden = true;
     if (slides.length) {
       $("waiting-screen").hidden = true;
@@ -214,6 +215,7 @@ async function refreshScreen() {
       if (!currentPlaylistId) {
         slides = [];
         ticker = [];
+        setTickerLogo(null);
         saveCache();
         stopAllMedia();
         $("waiting-message").textContent =
@@ -241,6 +243,7 @@ async function refreshPlaylist() {
     if (!res.ok) {
       slides = [];
       ticker = [];
+      setTickerLogo(null);
       saveCache();
       stopAllMedia();
       $("waiting-message").textContent =
@@ -256,6 +259,7 @@ async function refreshPlaylist() {
     if (!newSlides.length) {
       slides = [];
       ticker = [];
+      setTickerLogo(null);
       saveCache();
       stopAllMedia();
       $("waiting-message").textContent =
@@ -272,6 +276,7 @@ async function refreshPlaylist() {
 
     slides = newSlides;
     ticker = newTicker;
+    setTickerLogo(data.tickerLogo || null);
 
     $("waiting-screen").hidden = true;
     $("app").hidden = false;
@@ -618,6 +623,16 @@ setInterval(initWeather, 30 * 60 * 1000);
 
 /* ---------- ticker ---------- */
 
+function setTickerLogo(url) {
+  const logoEl = $("ticker-logo");
+  if (url) {
+    logoEl.src = url;
+    logoEl.hidden = false;
+  } else {
+    logoEl.hidden = true;
+  }
+}
+
 function renderTicker() {
   const el = $("ticker");
   el.innerHTML = ticker.map(() => '<span class="msg"></span>').join("");
@@ -637,3 +652,4 @@ document.addEventListener("keydown", (e) => {
 });
 
 boot();
+ticker = cached.ticker || [];
