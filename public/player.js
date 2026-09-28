@@ -6,6 +6,7 @@ let screenId = null;
 let currentPlaylistId;
 let slides = [];
 let ticker = [];
+let tickerLogo = null;
 let screenName = "";
 let offline = false;
 
@@ -33,6 +34,7 @@ function saveCache() {
         playlistId: currentPlaylistId || null,
         slides,
         ticker,
+        tickerLogo,
         current,
         savedAt: Date.now(),
       })
@@ -68,6 +70,7 @@ async function boot() {
     currentPlaylistId = cached.playlistId;
     slides = cached.slides || [];
     ticker = cached.ticker || [];
+    tickerLogo = cached.tickerLogo || null;
     setTickerLogo(cached.tickerLogo || null);
     $("pairing-screen").hidden = true;
     if (slides.length) {
@@ -215,6 +218,7 @@ async function refreshScreen() {
       if (!currentPlaylistId) {
         slides = [];
         ticker = [];
+        tickerLogo = null;
         setTickerLogo(null);
         saveCache();
         stopAllMedia();
@@ -276,6 +280,7 @@ async function refreshPlaylist() {
 
     slides = newSlides;
     ticker = newTicker;
+    tickerLogo = data.tickerLogo || null;
     setTickerLogo(data.tickerLogo || null);
 
     $("waiting-screen").hidden = true;
