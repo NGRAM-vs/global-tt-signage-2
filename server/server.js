@@ -543,7 +543,7 @@ app.patch(
         name,
         items,
         ticker,
-        tickerLogo,
+        ticker_logo: tickerLogo,
         created_at: row.created_at,
       })
     );

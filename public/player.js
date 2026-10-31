@@ -247,6 +247,7 @@ async function refreshPlaylist() {
     if (!res.ok) {
       slides = [];
       ticker = [];
+      tickerLogo = null;
       setTickerLogo(null);
       saveCache();
       stopAllMedia();
@@ -263,6 +264,7 @@ async function refreshPlaylist() {
     if (!newSlides.length) {
       slides = [];
       ticker = [];
+      tickerLogo = null;
       setTickerLogo(null);
       saveCache();
       stopAllMedia();
