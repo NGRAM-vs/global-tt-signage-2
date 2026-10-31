@@ -219,6 +219,16 @@ html, body { height: 100%; overflow: hidden; }
 .screens-table select { width: auto; min-width: 180px; }
 .row-actions { display: flex; gap: 6px; }
 
+/* ---------- USERS ---------- */
+
+.user-form { display: grid; grid-template-columns: 1.4fr 1.2fr 0.8fr auto; gap: 12px; align-items: end; margin-bottom: 14px; }
+.user-form label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--text-dim); }
+.role-tag { font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; padding: 3px 8px; border-radius: 6px; background: var(--bg-elevated); color: var(--text-dim); }
+.role-tag.admin { background: var(--accent-soft); color: var(--accent); }
+.whoami { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; padding: 10px 12px; font-size: 12px; color: var(--text-dim); word-break: break-all; }
+.users-table select { width: auto; min-width: 110px; }
+@media (max-width: 860px) { .user-form { grid-template-columns: 1fr; } }
+
 /* ---------- MODAL ---------- */
 
 .modal {
