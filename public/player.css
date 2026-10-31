@@ -348,20 +348,20 @@ body {
 #ticker-logo-frame.ticker-logo-frame {
   flex: none;
   display: flex;
-  align-items: center;
+  align-items: stretch;
   justify-content: center;
-  background: #ffffff;
+  padding: 0;
+  overflow: hidden;
   border: 2px solid var(--accent);
   border-radius: 12px;
-  padding: 6px 10px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
 }
 
 .ticker-logo {
-  height: 58px;
+  height: 68px;
   width: auto;
-  max-width: 150px;
-  object-fit: contain;
+  max-width: 160px;
+  object-fit: cover;
   display: block;
 }
 #ticker-logo-frame.ticker-logo-frame {
