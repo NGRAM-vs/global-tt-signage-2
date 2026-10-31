@@ -21,6 +21,7 @@ const SESSION_SECRET = process.env.SESSION_SECRET || "dev-secret-change-me";
 const IS_PRODUCTION = process.env.NODE_ENV === "production";
 
 const app = express();
+app.set("trust proxy", 1);
 const UPLOADS_DIR = path.join(__dirname, "..", "uploads");
 fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 
