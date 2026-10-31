@@ -8,6 +8,7 @@ const express = require("express");
 const session = require("express-session");
 const multer = require("multer");
 const rateLimit = require("express-rate-limit");
+const convert = require("heic-convert");
 
 const { pool, init } = require("./db");
 const { broadcast, subscribe } = require("./events");
@@ -357,12 +358,43 @@ app.post(
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       const id = crypto.randomUUID();
-      const type = file.mimetype.startsWith("video")
+
+      // Browsers often send HEIC with an empty or odd mimetype, so check the extension too.
+      const isHeic =
+        /\.(heic|heif)$/i.test(file.originalname) ||
+        /image\/hei[cf]/i.test(file.mimetype);
+
+      let displayName = file.originalname;
+      let mimetype = file.mimetype;
+      let size = file.size;
+      let sourcePath = file.path;
+
+      if (isHeic) {
+        try {
+          const input = await fs.promises.readFile(file.path);
+          const output = await convert({
+            buffer: input,
+            format: "JPEG",
+            quality: 0.9,
+          });
+          sourcePath = file.path + ".jpg";
+          await fs.promises.writeFile(sourcePath, output);
+          displayName =
+            file.originalname.replace(/\.(heic|heif)$/i, "") + ".jpg";
+          mimetype = "image/jpeg";
+          size = output.length;
+        } catch (err) {
+          fs.unlink(file.path, () => {});
+          return res.status(400).json({ error: "Couldn't convert HEIC image" });
+        }
+      }
+
+      const type = mimetype.startsWith("video")
         ? "video"
-        : file.mimetype.startsWith("audio")
+        : mimetype.startsWith("audio")
         ? "audio"
         : "image";
-      const safeName = file.originalname.replace(/[^a-zA-Z0-9.\-_]/g, "_");
+      const safeName = displayName.replace(/[^a-zA-Z0-9.\-_]/g, "_");
       const key =
         Date.now() +
         "-" +
@@ -372,9 +404,10 @@ app.post(
       const url = "/uploads/" + key;
 
       try {
-        await fs.promises.copyFile(file.path, path.join(UPLOADS_DIR, key));
+        await fs.promises.copyFile(sourcePath, path.join(UPLOADS_DIR, key));
       } finally {
-        fs.unlink(file.path, () => {}); // always clear the temp copy
+        fs.unlink(file.path, () => {});
+        if (sourcePath !== file.path) fs.unlink(sourcePath, () => {});
       }
 
       const createdAt = Date.now();
@@ -384,24 +417,15 @@ app.post(
           : null;
       await pool.query(
         "INSERT INTO content (id, name, type, url, filename, size, duration_seconds, created_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)",
-        [
-          id,
-          file.originalname,
-          type,
-          url,
-          key,
-          file.size,
-          durationSeconds,
-          createdAt,
-        ]
+        [id, displayName, type, url, key, size, durationSeconds, createdAt]
       );
       created.push({
         id,
-        name: file.originalname,
+        name: displayName,
         type,
         url,
         filename: key,
-        size: file.size,
+        size,
         duration_seconds: durationSeconds,
         created_at: createdAt,
       });
