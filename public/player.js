@@ -631,11 +631,43 @@ setInterval(initWeather, 30 * 60 * 1000);
 function setTickerLogo(url) {
   const frameEl = $("ticker-logo-frame");
   const logoEl = $("ticker-logo");
-  if (url) {
-    logoEl.src = url;
-    frameEl.hidden = false;
-  } else {
+  if (!url) {
     frameEl.hidden = true;
+    return;
+  }
+  logoEl.onload = () => {
+    frameEl.dataset.tone = detectLogoTone(logoEl);
+    frameEl.hidden = false;
+  };
+  logoEl.src = url;
+}
+
+// Returns the frame color to use: "dark" for light logos, "light" for dark
+// logos, "neutral" when the logo is mixed or can't be measured.
+function detectLogoTone(img) {
+  try {
+    const size = 32;
+    const canvas = document.createElement("canvas");
+    canvas.width = canvas.height = size;
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    ctx.drawImage(img, 0, 0, size, size);
+    const data = ctx.getImageData(0, 0, size, size).data;
+
+    let sum = 0;
+    let count = 0;
+    for (let i = 0; i < data.length; i += 4) {
+      if (data[i + 3] < 128) continue; // skip transparent pixels
+      sum += 0.2126 * data[i] + 0.7152 * data[i + 1] + 0.0722 * data[i + 2];
+      count++;
+    }
+    if (!count) return "neutral";
+
+    const avg = sum / count;
+    if (avg > 170) return "dark"; // light logo, dark frame
+    if (avg < 90) return "light"; // dark logo, light frame
+    return "neutral"; // mixed logo
+  } catch (e) {
+    return "neutral"; // image from another site can't be measured
   }
 }
 

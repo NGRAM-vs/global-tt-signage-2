@@ -350,17 +350,28 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--bg);
-  border: 1px solid var(--accent);
-  border-radius: 10px;
-  padding: 6px;
+  background: #ffffff;
+  border: 2px solid var(--accent);
+  border-radius: 12px;
+  padding: 6px 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
 }
 
 .ticker-logo {
-  width: 62px;
-  height: 62px;
+  height: 58px;
+  width: auto;
+  max-width: 150px;
   object-fit: contain;
   display: block;
+}
+#ticker-logo-frame.ticker-logo-frame {
+  background: #8b93a7;
+} /* neutral default */
+#ticker-logo-frame[data-tone="light"] {
+  background: #ffffff;
+}
+#ticker-logo-frame[data-tone="dark"] {
+  background: #0b1220;
 }
 
 .ticker-track {
